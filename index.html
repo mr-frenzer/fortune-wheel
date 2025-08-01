@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortune Wheel - Elegant Style</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --dark-blue: #0A192F;
+            --medium-blue: #172A46;
+            --light-blue: #304A6E;
+            --text-light: #CCD6F6;
+            --text-accent: #64FFDA; /* A minty green accent for contrast */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: var(--text-light);
+        }
+
+        .container {
+            background-color: var(--medium-blue);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            border: 1px solid var(--light-blue);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+
+        canvas {
+            display: block;
+            border: 4px solid var(--text-light);
+            border-radius: 50%;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            background-color: var(--dark-blue);
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+        }
+
+        /* Styling for the new winner text overlay */
+        #winnerDisplay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            background-color: var(--dark-blue);
+            padding: 15px 30px;
+            border-radius: 10px;
+            border: 2px solid var(--text-accent);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-accent);
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.5s ease-in-out;
+            box-shadow: 0 0 15px var(--text-accent), 0 0 10px var(--text-accent);
+            text-shadow: 0 0 5px rgba(100, 255, 218, 0.5);
+            pointer-events: none;
+        }
+        
+        #winnerDisplay.visible {
+            opacity: 1;
+        }
+        
+        .canvas-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--text-light);
+            pointer-events: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .button {
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* Updated primary button style to be bigger and more prominent */
+        .button-primary {
+            background-color: var(--text-accent);
+            color: var(--dark-blue);
+            border: 1px solid var(--text-accent);
+            padding: 16px 40px;
+            font-size: 1.1rem;
+            box-shadow: 0 0 15px var(--text-accent), 0 0 10px var(--text-accent);
+        }
+
+        .button-primary:hover:not(:disabled) {
+            background-color: transparent;
+            color: var(--text-accent);
+            box-shadow: 0 0 5px var(--text-accent), 0 0 2px var(--text-accent);
+        }
+        
+        .button-primary:disabled {
+            background-color: var(--light-blue);
+            border-color: var(--light-blue);
+            color: #aaa;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .button-secondary {
+            background-color: transparent;
+            color: var(--text-light);
+            border: 1px solid var(--text-light);
+        }
+
+        .button-secondary:hover:not(:disabled) {
+            background-color: var(--text-light);
+            color: var(--dark-blue);
+        }
+
+        .button-danger {
+            background-color: transparent;
+            color: #EF4444; /* Red */
+            border: 1px solid #EF4444;
+        }
+        
+        .button-danger:hover {
+            background-color: #EF4444;
+            color: #fff;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px 15px;
+            background-color: var(--dark-blue);
+            color: var(--text-light);
+            border: 1px solid var(--light-blue);
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--text-accent);
+            box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.2);
+        }
+        
+        .input-field::placeholder {
+            color: var(--light-blue);
+        }
+
+        .label {
+            color: var(--text-light);
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: left;
+            width: 100%;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .remove-option-btn {
+            background-color: transparent;
+            color: #EF4444; /* Red for the remove button */
+            border: 1px solid #EF4444;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .remove-option-btn:hover {
+            background-color: #EF4444;
+            color: #fff;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .container {
+                padding: 20px;
+            }
+            .title {
+                font-size: 2.5rem;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            .button {
+                width: 100%;
+            }
+            .canvas-container, canvas {
+                width: 280px;
+                height: 280px;
+            }
+            #winnerDisplay {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Fortune Wheel</h1>
+
+        <div class="flex flex-col gap-3 w-full">
+            <label class="label">Enter your options:</label>
+            <!-- Container for the dynamic input fields -->
+            <div id="optionsContainer" class="flex flex-col gap-3 w-full">
+                <!-- Input fields are added dynamically here -->
+            </div>
+            <div class="button-group mt-2">
+                <button id="addOptionBtn" class="button button-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                    Add Option
+                </button>
+                <button id="clearAllBtn" class="button button-danger">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                    Clear All
+                </button>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="wheelCanvas" width="400" height="400"></canvas>
+            <div id="canvasMessage" class="canvas-message">
+                Please enter at least two options to display the wheel.
+            </div>
+            <div id="winnerDisplay"></div>
+        </div>
+
+        <button id="spinWheelBtn" class="button button-primary" disabled>
+            SPIN THE WHEEL!
+        </button>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const addOptionBtn = document.getElementById('addOptionBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const spinWheelBtn = document.getElementById('spinWheelBtn');
+        const canvasMessageDiv = document.getElementById('canvasMessage');
+        const winnerDisplay = document.getElementById('winnerDisplay');
+        
+        // CSS variables for JavaScript
+        const textAccentColor = getComputedStyle(document.documentElement).getPropertyValue('--text-accent').trim();
+        const textLightColor = getComputedStyle(document.documentElement).getPropertyValue('--text-light').trim();
+        const darkBlueColor = getComputedStyle(document.documentElement).getPropertyValue('--dark-blue').trim();
+
+        // Default options
+        let options = [];
+        let isSpinning = false;
+        
+        // Wheel properties
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = Math.min(centerX, centerY) * 0.9;
+        let startAngle = 0;
+        let arc;
+        let spinTimeout = null;
+        let spinAngleStart = 10;
+        let spinTime = 0;
+        let spinTimeTotal = 0;
+        let winningIndex = -1;
+        const numberOfEmptySlices = 3; // The placeholder wheel now has 3 segments
+
+        // Color palette for the wheel segments
+        const colors = [
+            "#0E2954", "#1F4E79", "#2D8BBA", "#64B5F6", "#81C7F3",
+            "#0A3E66", "#1C6A9C", "#4A94C7", "#73B3E2", "#97D1F5"
+        ];
+        
+        // New color palette for the greyed-out placeholder wheel
+        const greyBlueColors = ["#203348", "#283C53", "#30455B"];
+        
+        /**
+         * Draws the empty wheel structure with no text.
+         */
+        function drawEmptyWheel() {
+            const emptyArc = Math.PI / (numberOfEmptySlices / 2);
+            for (let i = 0; i < numberOfEmptySlices; i++) {
+                const angle = startAngle + i * emptyArc;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, angle, angle + emptyArc, false);
+                ctx.lineTo(centerX, centerY);
+                // Use the new grey-blue color palette for the placeholder wheel
+                ctx.fillStyle = greyBlueColors[i % greyBlueColors.length];
+                ctx.fill();
+                
+                ctx.strokeStyle = darkBlueColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            drawPointer();
+        }
+
+        /**
+         * Draws the wheel segments and text.
+         */
+        function drawWheel() {
+            // Gather options from the input fields
+            updateOptionsFromInputs();
+
+            if (options.length < 2) {
+                // If there are less than two options, clear the canvas and show a message
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawEmptyWheel();
+                canvasMessageDiv.style.display = 'block';
+                spinWheelBtn.disabled = true;
+                return;
+            }
+
+            // If there are enough options, hide the message and enable the button
+            canvasMessageDiv.style.display = 'none';
+            spinWheelBtn.disabled = false;
+            
+            arc = Math.PI / (options.length / 2);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < options.length; i++) {
+                const angle = startAngle + i * arc;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, angle, angle + arc, false);
+                ctx.lineTo(centerX, centerY);
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+                
+                // Draw default border
+                ctx.strokeStyle = darkBlueColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw text
+                ctx.save();
+                
+                // Translate and rotate the canvas context to the center of the current segment
+                ctx.translate(centerX, centerY);
+                let textAngle = angle + arc / 2;
+                ctx.rotate(textAngle);
+
+                // Set text properties
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 16px Inter";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+
+                // Draw the text at a fixed distance from the center (along the rotated x-axis)
+                const text = options[i];
+                const textX = radius * 0.6; // Position text at 60% of the radius
+                const textY = 0;
+                ctx.fillText(text, textX, textY);
+
+                ctx.restore();
+            }
+
+            // After all segments and text are drawn, draw the highlight for the winning segment
+            if (winningIndex !== -1) {
+                const angle = startAngle + winningIndex * arc;
+                
+                // Calculate the starting point of the arc on the circumference
+                const startX = centerX + radius * Math.cos(angle);
+                const startY = centerY + radius * Math.sin(angle);
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY); // Start at the center
+                ctx.lineTo(startX, startY); // Draw a line to the start of the arc
+                ctx.arc(centerX, centerY, radius, angle, angle + arc, false); // Draw the curved edge
+                ctx.lineTo(centerX, centerY); // Draw a line back to the center to close the path
+                
+                ctx.strokeStyle = textAccentColor;
+                ctx.lineWidth = 6;
+                ctx.stroke();
+            }
+
+            drawPointer();
+        }
+
+        /**
+         * Draws the pointer/indicator at the top of the wheel.
+         */
+        function drawPointer() {
+            ctx.fillStyle = textAccentColor;
+            ctx.beginPath();
+            // Create a wider base
+            ctx.moveTo(centerX - 15, 10);
+            ctx.lineTo(centerX + 15, 10);
+            // Move the tip further down
+            ctx.lineTo(centerX, 38);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        /**
+         * Gathers the options from all dynamic input fields.
+         */
+        function updateOptionsFromInputs() {
+            const inputElements = document.querySelectorAll('#optionsContainer input.input-field');
+            options = Array.from(inputElements)
+                .map(input => input.value.trim())
+                .filter(value => value !== '');
+        }
+        
+        /**
+         * Clears all option input fields.
+         */
+        function clearAllOptions() {
+            optionsContainer.innerHTML = ''; // Remove all child elements
+            options = [];
+            winningIndex = -1;
+            addOptionField('e.g. movie');
+            addOptionField('e.g. boardgame');
+            addOptionField('e.g. party');
+            winnerDisplay.classList.remove('visible');
+            drawWheel();
+        }
+
+        /**
+         * Adds a new input field for an option.
+         * @param {string} [placeholderText='Enter an option'] - The placeholder text for the input field.
+         */
+        function addOptionField(placeholderText = 'Enter an option') {
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'option-item';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'input-field';
+            input.value = ''; // Ensure the input is empty by default
+            input.placeholder = placeholderText;
+
+            // Add event listener to update the wheel in real-time
+            input.addEventListener('input', drawWheel);
+            
+            // Updated keydown event listener to handle Enter key presses
+            input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent form submission
+                    const inputs = Array.from(optionsContainer.querySelectorAll('input.input-field'));
+                    const currentIndex = inputs.indexOf(event.target);
+                    
+                    if (currentIndex < inputs.length - 1) {
+                        // If it's not the last input, focus on the next one
+                        inputs[currentIndex + 1].focus();
+                    } else {
+                        // If it is the last input, add a new one and focus on it
+                        addOptionField();
+                        const newInputs = optionsContainer.querySelectorAll('input.input-field');
+                        newInputs[newInputs.length - 1].focus();
+                    }
+                }
+            });
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-option-btn';
+            removeBtn.textContent = '×';
+            removeBtn.onclick = () => {
+                optionsContainer.removeChild(optionDiv);
+                drawWheel(); // Redraw the wheel when an option is removed
+            };
+
+            optionDiv.appendChild(input);
+            optionDiv.appendChild(removeBtn);
+            optionsContainer.appendChild(optionDiv);
+            
+            // Redraw the wheel when a new field is added
+            drawWheel();
+        }
+
+        /**
+         * Animation loop for spinning the wheel.
+         */
+        function rotateWheel() {
+            spinTime += 30;
+            if (spinTime >= spinTimeTotal) {
+                stopRotateWheel();
+                return;
+            }
+            const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+            startAngle += (spinAngle * Math.PI / 180);
+            drawWheel();
+            spinTimeout = setTimeout(rotateWheel, 30);
+        }
+
+        /**
+         * Easing function for smooth deceleration.
+         */
+        function easeOut(t, b, c, d) {
+            const ts = (t /= d) * t;
+            const tc = ts * t;
+            return b + c * (tc + -3 * ts + 3 * t);
+        }
+
+        /**
+         * Stops the wheel and determines the winning option.
+         */
+        function stopRotateWheel() {
+            clearTimeout(spinTimeout);
+            const degrees = startAngle * 180 / Math.PI + 90;
+            const arcd = arc * 180 / Math.PI;
+            const index = Math.floor((360 - degrees % 360) / arcd);
+            
+            if (options[index]) {
+                winningIndex = index;
+                winnerDisplay.textContent = `Winner: ${options[index]}!`;
+                winnerDisplay.classList.add('visible');
+            } else {
+                winningIndex = -1;
+                winnerDisplay.textContent = "No option found. Please check your entries.";
+                winnerDisplay.classList.add('visible');
+            }
+
+            drawWheel(); // Redraw to highlight the winner
+
+            spinWheelBtn.disabled = false;
+            isSpinning = false;
+        }
+
+        /**
+         * Starts the wheel spin.
+         */
+        function spin() {
+            updateOptionsFromInputs();
+            if (isSpinning || options.length < 2) {
+                return;
+            }
+            isSpinning = true;
+            spinWheelBtn.disabled = true;
+            winnerDisplay.classList.remove('visible'); // Hide winner display
+            winningIndex = -1; // Reset winning index
+            drawWheel(); // Redraw to remove any previous highlight
+
+            spinTime = 0;
+            spinTimeTotal = Math.random() * 3000 + 4000;
+            spinAngleStart = Math.random() * 10 + 10;
+
+            rotateWheel();
+        }
+
+        // Event listeners
+        addOptionBtn.addEventListener('click', () => addOptionField());
+        clearAllBtn.addEventListener('click', clearAllOptions);
+        spinWheelBtn.addEventListener('click', spin);
+
+        // Adds a few input fields with placeholders initially
+        window.onload = function() {
+            addOptionField('e.g. movie');
+            addOptionField('e.g. boardgame');
+            addOptionField('e.g. party');
+            drawWheel(); // Initial draw to show the empty wheel and default message
+            
+            // Add click listener to the canvas to spin the wheel
+            canvas.addEventListener('click', spin);
+        };
+    </script>
+</body>
+</html>
